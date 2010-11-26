@@ -29,38 +29,6 @@ import Text.Pandoc.Shared
 
 newtype Markdown = Markdown String
 
-{-
-markdown :: WriterOptions -> ParserState -> Markdown -> Html
-markdown wo ro = runIdentity . markdownWith' return wo ro
-
-markdownWith
-  :: (Pandoc -> GHandler sub master Pandoc)
-  -> WriterOptions
-  -> ParserState
-  -> Markdown
-  -> GWidget sub master ()
-markdownWith f wo ro = (addHtml =<<) . liftHandler . markdownWith' f wo ro
-
-markdownWith'
-  :: Monad m
-  => (Pandoc -> m Pandoc)
-  -> WriterOptions
-  -> ParserState
-  -> Markdown
-  -> m Html
-markdownWith' f wo ro
-  = liftM writePandoc
-  . f
-  -- . processWith goL
-  . parseMarkdown ro
-  . unMd -- where
-  -- goB ll@(Text.Pandoc.Header 1 [Code ('?':'?':xs)]) = fromMaybe (return ll) (blockMacros (words xs))
-  -- goB x = return x
-  -- goL (Link x (l,n))
-    -- | (S.approot `isPrefixOf` l || not (isExternal l)) && last l /= '/' = Link x (l++"/",n)
-  -- goL k = k
--}
-
 -- | Write untrusted 'Pandoc' to 'Html'. Calls 'sanitizeBalance' from xss-sanitize.
 writePandoc :: WriterOptions -> Pandoc -> Html
 writePandoc wo = preEscapedString . sanitizeBalance . writeHtmlString wo
