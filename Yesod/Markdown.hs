@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables, ViewPatterns #-}
 -- | This module provides functions for using Markdown with Yesod. An example pipeline could be
 --
 -- > (writePandoc defaultWriterOptions <$>) . localLinks . parseMarkdown defaultParserState
