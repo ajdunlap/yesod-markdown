@@ -17,6 +17,8 @@ module Yesod.Markdown
   where
 
 import Yesod
+import Data.Monoid
+import Data.String
 import Yesod.Form.Core
 import Text.Pandoc
 import Text.Pandoc.Shared
@@ -27,7 +29,7 @@ import qualified Data.Map as Map
 import qualified Data.ByteString.Char8 as B
 
 newtype Markdown = Markdown String
-  deriving (Eq, Ord, Show, Read, PersistField)
+  deriving (Eq, Ord, Show, Read, PersistField, IsString, Monoid)
 
 instance ToFormField Markdown y where
   toFormField = markdownField
