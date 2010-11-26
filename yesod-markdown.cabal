@@ -19,13 +19,18 @@ Build-type:           Simple
 -- Constraint on the version of Cabal needed to build this package.
 Cabal-version:       >=1.2
 
+flag ghc7
 
 Library
+  if flag(ghc7)
+    build-depends:   base                      >= 4.3      && < 5
+    cpp-options:     -DGHC7
+  else
+    build-depends:   base                      >= 4        && < 4.3
   Exposed-modules:    Yesod.Markdown, Yesod.Markdown.Macros
   Build-depends: yesod
-               , pandoc,
-               , base == 4.*
-               , containers,
+               , pandoc
+               , containers
                , xss-sanitize
                , bytestring
                , utf8-string

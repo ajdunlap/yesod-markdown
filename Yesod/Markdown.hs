@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving, CPP, QuasiQuotes, TypeFamilies, FlexibleInstances,
+              MultiParamTypeClasses #-}
 -- | This module provides functions for using Markdown with Yesod. An example pipeline could be
 --
 -- > (writePandoc defaultWriterOptions <$>) . localLinks . parseMarkdown defaultParserState
@@ -15,6 +17,7 @@ module Yesod.Markdown
   where
 
 import Yesod
+import Yesod.Form.Core
 import Text.Pandoc
 import Text.Pandoc.Shared
 import Text.HTML.SanitizeXSS
@@ -24,6 +27,34 @@ import qualified Data.Map as Map
 import qualified Data.ByteString.Char8 as B
 
 newtype Markdown = Markdown String
+  deriving (Eq, Ord, Show, Read, PersistField)
+
+instance ToFormField Markdown y where
+  toFormField = markdownField
+
+instance ToFormField (Maybe Markdown) y where
+  toFormField = maybeMarkdownField
+
+markdownField :: (IsForm f, FormType f ~ Markdown)
+              => FormFieldSettings -> Maybe Markdown -> f
+markdownField = requiredFieldHelper markdownFieldProfile
+
+maybeMarkdownField :: FormFieldSettings -> FormletField sub y (Maybe Markdown)
+maybeMarkdownField = optionalFieldHelper markdownFieldProfile
+
+markdownFieldProfile :: FieldProfile sub y Markdown
+markdownFieldProfile = FieldProfile
+    { fpParse = Right . Markdown
+    , fpRender = \(Markdown m) -> m
+    , fpWidget = \theId name val _isReq -> addHamlet
+#if GHC7
+        [hamlet|
+#else
+        [$hamlet|
+#endif
+%textarea.markdown#$theId$!name=$name$ $val$
+|]
+    }
 
 -- | Write untrusted 'Pandoc' to 'Html'. Calls 'sanitizeBalance' from xss-sanitize.
 writePandoc :: WriterOptions -> Pandoc -> Html
