@@ -12,23 +12,17 @@ module Yesod.Markdown
   , yesodDefaultWriterOptions
   , yesodDefaultParserState
   , yesodDefaultParserStateTrusted
-    -- * Macros
-    -- $macros
-  , inlineMacros
-  , blockMacros
   )
   where
 
 import Yesod
-import qualified Data.ByteString.Char8 as B
+import Text.Pandoc
+import Text.Pandoc.Shared
 import Text.HTML.SanitizeXSS
+import Control.Applicative
 import Data.Map ( Map )
 import qualified Data.Map as Map
-import Data.Data
-import Control.Applicative
-import Text.Pandoc
--- import Data.Maybe
-import Text.Pandoc.Shared
+import qualified Data.ByteString.Char8 as B
 
 newtype Markdown = Markdown String
 
@@ -53,53 +47,6 @@ localLinks p = (\y -> processWith (links y) p) <$> getYesod where
   links' y l = case splitPath y l of
     Left corrected -> links' y corrected
     Right xs       -> xs
-
--- $macros
--- Macros allow users to access more advanced functionality from within Markdown syntax. There are two types
--- of macros, block and inline, which allow substitution of 'Block' and 'Inline' data, respectively. Macros
--- are called in a very similar fashion to shell programs: the argument string is split on whitespace. The
--- first word is the name of the macro, and the remaining words are the arguments. Option-parsing libraries
--- may be useful for interpreting the arguments.
---
--- Note: using 'blockMacros' and 'inlineMacros' at the same time with the same magic string and can lead to behavior
--- that depends on the order in which they are called, if any of the macro names are the same for block and inline
--- macros. However, if none of the macro names are the same, unrecognized macro names will be ignored by the pass
--- that doesn't recognize them, leaving them available to be recognized by the other pass.
-
--- | Convert block-level macros. Block-level macros are signalled by a first-level header containing a piece of
--- inline code starting with a client-specified magic string. For example, if the magic string is @??@, a macro
--- can be called by
---
--- > #`??MACRO_NAME MACRO_ARGS`
---
--- where @MACRO_NAME@ is the identifying name of the macro and @MACRO_ARGS@ is a space-separated list of arguments.
-blockMacros
-  :: Yesod master
-  => Map String ([String] -> GHandler sub master Block) -- ^ Lookup table from macro names to macro functions
-  -> String                                             -- ^ Magic string to introduce the macro
-  -> Pandoc
-  -> GHandler sub master Pandoc
-blockMacros table magic p = processWithM blockMacros' p where
-  blockMacros' (Header 1 [Code (splitAt (length magic) -> (magic',words -> ((flip Map.lookup table -> Just f):xs)))])
-    | magic == magic' = f xs
-  blockMacros' b = return b
-
--- | Convert block-level macros. Inline-level macros are signalled by a piece of inline code starting with a
--- client-specified magic string. For example, if the magic string is @??@, a macro can be called by
---
--- > `??MACRO_NAME MACRO_ARGS`
---
--- where @MACRO_NAME@ is the identifying name of the macro and @MACRO_ARGS@ is a space-separated list of arguments.
-inlineMacros
-  :: Yesod master
-  => Map String ([String] -> GHandler sub master Inline) -- ^ Lookup table from macro names to macro functions
-  -> String                                              -- ^ Magic string to introduce the macro
-  -> Pandoc
-  -> GHandler sub master Pandoc
-inlineMacros table magic p = processWithM inlineMacros' p where
-  inlineMacros' (Code (splitAt (length magic) -> (magic',words -> ((flip Map.lookup table -> Just f):xs))))
-    | magic == magic' = f xs
-  inlineMacros' b = return b
 
 -- | A set of default Pandoc writer options good for Yesod websites. Enables Javascript-based email obfuscation,
 -- eliminates div tags around sections, and disables text wrapping.

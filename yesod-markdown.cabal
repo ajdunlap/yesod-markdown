@@ -21,17 +21,12 @@ Cabal-version:       >=1.2
 
 
 Library
-  Exposed-modules:    Yesod.Markdown
-  Build-depends:      yesod,
-                      pandoc,
-                      base == 4.*,
-                      containers,
-                      xss-sanitize,
-                      bytestring
-  
-  -- Modules not exported by this package.
-  -- Other-modules:       
-  
-  -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:         
+  Exposed-modules:    Yesod.Markdown, Yesod.Markdown.Macros
+  Build-depends: yesod
+               , pandoc,
+               , base == 4.*
+               , containers,
+               , xss-sanitize
+               , bytestring
+               , utf8-string
   
