@@ -2,7 +2,7 @@
 -- options, see
 -- http://www.haskell.org/cabal/release/cabal-latest/doc/users-guide/authors.html#pkg-descr.
 Name:                 yesod-markdown
-Version:              0.0
+Version:              0.1
 Synopsis:             Markdown processing for Yesod sites using Pandoc
 Description:          Process Markdown in Yesod sites.
 License:              BSD3
@@ -32,7 +32,6 @@ Library
   Build-depends: yesod
                , pandoc
                , containers
-               , xss-sanitize
                , bytestring
                , utf8-string
 

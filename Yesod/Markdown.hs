@@ -8,7 +8,6 @@ module Yesod.Markdown
   , parseMarkdown
   , localLinks
   , writePandoc
-  , writePandocTrusted
     -- * Option sets
   , yesodDefaultWriterOptions
   , yesodDefaultParserState
@@ -22,7 +21,6 @@ import Data.String
 import Yesod.Form.Core
 import Text.Pandoc
 import Text.Pandoc.Shared
-import Text.HTML.SanitizeXSS
 import Control.Applicative
 import Data.Map ( Map )
 import qualified Data.Map as Map
@@ -58,13 +56,9 @@ markdownFieldProfile = FieldProfile
 |]
     }
 
--- | Write untrusted 'Pandoc' to 'Html'. Calls 'sanitizeBalance' from xss-sanitize.
+-- | Write 'Pandoc' to 'Html'.
 writePandoc :: WriterOptions -> Pandoc -> Html
-writePandoc wo = preEscapedString . sanitizeBalance . writeHtmlString wo
-
--- | Write trusted 'Pandoc' to 'Html'. Does not sanitize or balance tags.
-writePandocTrusted :: WriterOptions -> Pandoc -> Html
-writePandocTrusted wo = preEscapedString . writeHtmlString wo
+writePandoc wo = preEscapedString . writeHtmlString wo
 
 -- | Read in 'Markdown' to an intermediate 'Pandoc' type.
 parseMarkdown :: ParserState -> Markdown -> Pandoc
@@ -89,11 +83,12 @@ yesodDefaultWriterOptions = defaultWriterOptions
   , writerWrapText = False
   }
 
--- | A set of default Pandoc reader options good for Yesod websites /where the data input is trusted/. Enables raw
--- HTML.
+-- | A set of default Pandoc reader options good for Yesod websites /where the data input is trusted/. Disables
+-- HTML sanitization and enables smart parsing and raw HTML parsing.
 yesodDefaultParserStateTrusted :: ParserState
-yesodDefaultParserStateTrusted = yesodDefaultParserState { stateParseRaw = True }
+yesodDefaultParserStateTrusted = yesodDefaultParserState { stateSanitizeHTML = False }
 
--- | A set of default Pandoc reader options good for Yesod websites. Enables smart parsing.
+-- | A set of default Pandoc reader options good for Yesod websites. Enables smart parsing, raw HTML parsing, and
+-- HTML sanitization.
 yesodDefaultParserState :: ParserState
-yesodDefaultParserState = defaultParserState { stateSmart = True }
+yesodDefaultParserState = defaultParserState { stateSmart = True, stateParseRaw = True, stateSanitizeHTML = True }
