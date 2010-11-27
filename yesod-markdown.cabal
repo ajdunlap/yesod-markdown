@@ -12,12 +12,13 @@ Maintainer:           alexander.dunlap@gmail.com
 Copyright:            (c) 2010 Alexander Dunlap
 Category:             Web, Yesod
 Build-type:           Simple
+Stability:            Alpha
 -- Extra files to be distributed with the package, such as examples or
 -- a README.
 -- Extra-source-files:  
 
 -- Constraint on the version of Cabal needed to build this package.
-Cabal-version:       >=1.2
+Cabal-version:       >=1.6
 
 flag ghc7
 
@@ -34,4 +35,7 @@ Library
                , xss-sanitize
                , bytestring
                , utf8-string
-  
+
+source-repository head
+  type:     git
+  location: git://github.com/ajdunlap/yesod-markdown.git
