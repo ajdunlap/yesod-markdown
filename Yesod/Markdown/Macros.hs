@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns, QuasiQuotes, FlexibleContexts, CPP #-}
 -- | Macros allow users to access more advanced functionality from within Markdown syntax. There are two types
 -- of macros, block and inline, which allow substitution of 'Block' and 'Inline' data, respectively. Macros
 -- are called in a very similar fashion to shell programs: the argument string is split on whitespace. The
@@ -14,6 +14,7 @@ module Yesod.Markdown.Macros
   where
 
 import Text.Pandoc
+import Safe
 import Yesod
 import Control.Applicative
 import Data.Map ( Map )
@@ -46,14 +47,14 @@ blockMacros magic table p = processWithM blockMacros' p where
 -- where @MACRO_NAME@ is the identifying name of the macro and @MACRO_ARGS@ is a space-separated list of arguments.
 inlineMacros
   :: Yesod master
-  => String                                              -- ^ Magic string to introduce the macro
-  -> Map String ([String] -> GHandler sub master Inline) -- ^ Lookup table from macro names to macro functions
+  => String                                                -- ^ Magic string to introduce the macro
+  -> Map String ([String] -> GHandler sub master [Inline]) -- ^ Lookup table from macro names to macro functions
   -> Pandoc
   -> GHandler sub master Pandoc
-inlineMacros magic table p = processWithM inlineMacros' p where
+inlineMacros magic table p = processWithM (fmap concat . mapM inlineMacros') p where
   inlineMacros' (Code (splitAt (length magic) -> (magic',words -> ((flip Map.lookup table -> Just f):xs))))
     | magic == magic' = f xs
-  inlineMacros' b = return b
+  inlineMacros' b = return [b]
 
 -- | Convert a 'Hamlet' value to a 'Block'.
 hamletToBlock :: Hamlet (Route master) -> GHandler sub master Block
@@ -62,3 +63,14 @@ hamletToBlock x = RawHtml . U.toString . renderHtml . x <$> getUrlRenderParams
 -- | Convert a 'Hamlet' value to an 'Inline'.
 hamletToInline :: Hamlet (Route master) -> GHandler sub master Inline
 hamletToInline x = HtmlInline . U.toString . renderHtml . x <$> getUrlRenderParams
+
+-- | Read in 
+localRoute :: Read (Route master) => [String] -> GHandler sub master Inline
+localRoute = maybe (return (Str "")) f . readMay . unwords where
+  f = hamletToInline . (\x ->
+#if GHC7
+        [hamlet|
+#else
+        [$hamlet|
+#endif
+@x@|])

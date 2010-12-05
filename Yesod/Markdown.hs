@@ -35,6 +35,12 @@ instance ToFormField Markdown y where
 instance ToFormField (Maybe Markdown) y where
   toFormField = maybeMarkdownField
 
+lines' :: String -> [String]
+lines' = map go . lines where
+  go [] = []
+  go ('\r':[]) = []
+  go (x:xs) = x : go xs
+
 markdownField :: (IsForm f, FormType f ~ Markdown)
               => FormFieldSettings -> Maybe Markdown -> f
 markdownField = requiredFieldHelper markdownFieldProfile
@@ -44,7 +50,7 @@ maybeMarkdownField = optionalFieldHelper markdownFieldProfile
 
 markdownFieldProfile :: FieldProfile sub y Markdown
 markdownFieldProfile = FieldProfile
-    { fpParse = Right . Markdown
+    { fpParse = Right . Markdown . unlines . lines'
     , fpRender = \(Markdown m) -> m
     , fpWidget = \theId name val _isReq -> addHamlet
 #if GHC7
