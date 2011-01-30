@@ -12,6 +12,9 @@ module Yesod.Markdown
   , yesodDefaultWriterOptions
   , yesodDefaultParserState
   , yesodDefaultParserStateTrusted
+   -- * Form helpers
+  , markdownField
+  , maybeMarkdownField
   )
   where
 
