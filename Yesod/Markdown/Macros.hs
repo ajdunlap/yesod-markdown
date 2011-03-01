@@ -73,4 +73,5 @@ localRoute = maybe (return (Str "")) f . readMay . unwords where
 #else
         [$hamlet|
 #endif
-@x@|])
+\@{x}
+|])

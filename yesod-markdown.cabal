@@ -30,6 +30,7 @@ Library
     build-depends:   base                      >= 4        && < 4.3
   Exposed-modules:    Yesod.Markdown, Yesod.Markdown.Macros
   Build-depends: yesod
+               , yesod-form
                , pandoc
                , containers
                , bytestring

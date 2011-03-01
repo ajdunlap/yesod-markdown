@@ -27,7 +27,6 @@ import Text.Pandoc.Shared
 import Control.Applicative
 import Data.Map ( Map )
 import qualified Data.Map as Map
-import qualified Data.ByteString.Char8 as B
 
 newtype Markdown = Markdown String
   deriving (Eq, Ord, Show, Read, PersistField, IsString, Monoid)
@@ -61,7 +60,7 @@ markdownFieldProfile = FieldProfile
 #else
         [$hamlet|
 #endif
-%textarea.markdown#$theId$!name=$name$ $val$
+<textarea id="#{theId}" name="#{name}" .markdown>#{val}
 |]
     }
 
@@ -77,9 +76,9 @@ parseMarkdown ro (Markdown m) = readMarkdown ro m
 -- prefix @~:@. It normalizes the links and replaces the @~:@ with the @approot@ value for the site.
 localLinks :: Yesod master => Pandoc -> GHandler sub master Pandoc
 localLinks p = (\y -> processWith (links y) p) <$> getYesod where
-  links y (Link x ('~':':':l,n)) = Link x (joinPath y (approot y) (links' y (B.pack l)) [],n)
+  links y (Link x ('~':':':l,n)) = Link x (joinPath y (approot y) (links' y [l]) [],n)
   links _ x = x
-  links' y l = case splitPath y l of
+  links' y l = case cleanPath y l of
     Left corrected -> links' y corrected
     Right xs       -> xs
 
