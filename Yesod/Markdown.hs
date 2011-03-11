@@ -91,12 +91,16 @@ yesodDefaultWriterOptions = defaultWriterOptions
   , writerWrapText = False
   }
 
+--
+-- TODO: Pandoc dropped stateSanitizeHTML? or maybe you just can't shut 
+-- it off...
+--
 -- | A set of default Pandoc reader options good for Yesod websites /where the data input is trusted/. Disables
 -- HTML sanitization and enables smart parsing and raw HTML parsing.
 yesodDefaultParserStateTrusted :: ParserState
-yesodDefaultParserStateTrusted = yesodDefaultParserState { stateSanitizeHTML = False }
+yesodDefaultParserStateTrusted = yesodDefaultParserState
 
 -- | A set of default Pandoc reader options good for Yesod websites. Enables smart parsing, raw HTML parsing, and
 -- HTML sanitization.
 yesodDefaultParserState :: ParserState
-yesodDefaultParserState = defaultParserState { stateSmart = True, stateParseRaw = True, stateSanitizeHTML = True }
+yesodDefaultParserState = defaultParserState { stateSmart = True, stateParseRaw = True }
