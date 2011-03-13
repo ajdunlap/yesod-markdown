@@ -7,6 +7,7 @@ module Yesod.Markdown
   ( Markdown (..)
   , parseMarkdown
   , localLinks
+  , addTitles
   , writePandoc
     -- * Option sets
   , yesodDefaultWriterOptions
@@ -27,6 +28,10 @@ import Text.Pandoc.Shared
 import Control.Applicative
 import Data.Map ( Map )
 import qualified Data.Map as Map
+
+import Data.Char                  (isSpace)
+import Network.HTTP.Enumerator    (simpleHttp)
+import qualified Data.ByteString.Lazy.Char8 as C8
 
 newtype Markdown = Markdown String
   deriving (Eq, Ord, Show, Read, PersistField, IsString, Monoid)
@@ -75,12 +80,49 @@ parseMarkdown ro (Markdown m) = readMarkdown ro m
 -- | Convert local (in-site) links. This function works on all link URLs that start with the two-character
 -- prefix @~:@. It normalizes the links and replaces the @~:@ with the @approot@ value for the site.
 localLinks :: Yesod master => Pandoc -> GHandler sub master Pandoc
-localLinks p = (\y -> processWith (links y) p) <$> getYesod where
+localLinks p = (\y -> bottomUp (links y) p) <$> getYesod where
   links y (Link x ('~':':':l,n)) = Link x (joinPath y (approot y) (links' y [l]) [],n)
   links _ x = x
   links' y l = case cleanPath y l of
     Left corrected -> links' y corrected
     Right xs       -> xs
+
+-- | Process any links without titles specified by actually requesting 
+--   the page and determining it's real title
+addTitles :: Yesod m => Pandoc -> GHandler s m Pandoc
+addTitles = bottomUpM addTitle
+
+-- | Add a title to a link
+addTitle :: Yesod m => Inline -> GHandler s m Inline
+addTitle (Link x (u,[])) = do
+    t <- liftIO $ getTitle u
+    return $ Link x (t,u)
+
+addTitle l = return l
+
+-- | Fetch the title for a url
+getTitle :: String -> IO String
+getTitle url = return
+             . trim
+             . parseTitle
+             . removeNewLines
+             . C8.unpack =<< simpleHttp url
+
+parseTitle :: String -> String
+parseTitle []                                 = []
+parseTitle ('<':'t':'i':'t':'l':'e':'>':rest) = takeWhile (/= '<') rest
+parseTitle ('<':'T':'I':'T':'L':'E':'>':rest) = takeWhile (/= '<') rest
+parseTitle (x:rest)                           = parseTitle rest
+
+removeNewLines :: String -> String
+removeNewLines []          = []
+removeNewLines ('\n':rest) = removeNewLines rest
+removeNewLines (x:rest)    = x : removeNewLines rest
+
+trim :: String -> String
+trim = f . f
+    where
+        f = reverse . dropWhile isSpace
 
 -- | A set of default Pandoc writer options good for Yesod websites. Enables Javascript-based email obfuscation,
 -- eliminates div tags around sections, and disables text wrapping.
