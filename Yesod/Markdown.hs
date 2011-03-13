@@ -102,11 +102,13 @@ addTitle l = return l
 
 -- | Fetch the title for a url
 getTitle :: String -> IO String
-getTitle url = return
-             . trim
-             . parseTitle
-             . removeNewLines
-             . C8.unpack =<< simpleHttp url
+getTitle url@('h':'t':'t':'p':':':'/':'/':_) = return
+    . trim
+    . parseTitle
+    . removeNewLines
+    . C8.unpack =<< simpleHttp url
+
+getTitle rel = return ""
 
 parseTitle :: String -> String
 parseTitle []                                 = []
