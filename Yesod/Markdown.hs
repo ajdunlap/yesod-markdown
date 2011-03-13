@@ -96,7 +96,7 @@ addTitles = bottomUpM addTitle
 addTitle :: Yesod m => Inline -> GHandler s m Inline
 addTitle (Link x (u,[])) = do
     t <- liftIO $ getTitle u
-    return $ Link x (t,u)
+    return $ Link x (u,t)
 
 addTitle l = return l
 
