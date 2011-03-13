@@ -36,6 +36,7 @@ Library
                , bytestring
                , utf8-string
                , safe
+               , http-enumerator
 
 source-repository head
   type:     git
