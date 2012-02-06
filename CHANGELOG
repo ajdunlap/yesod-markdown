@@ -1,4 +1,0 @@
-0.1:
-
-  - Removed dependency on xss-sanitize, instead using Parsec's built-in HTML
-    sanitization.
