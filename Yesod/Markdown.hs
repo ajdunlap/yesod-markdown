@@ -1,86 +1,102 @@
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+-------------------------------------------------------------------------------
 -- |
 --
--- This module provides functions for using Markdown with Yesod. An 
--- example pipeline could be:
+-- Rewrite/simplification of yesod-markdown written by ajdunlap.
 --
--- > (writePandoc defaultWriterOptions <$>) . localLinks . parseMarkdown defaultParserState
+-- Forked from <https://github.com/ajdunlap/yesod-markdown>.
 --
+-------------------------------------------------------------------------------
 module Yesod.Markdown
   ( Markdown(..)
+  -- * Wrappers
+  , markdownToHtml
+  , markdownToHtmlTrusted
+  , markdownFromFile
   -- * Conversions
   , parseMarkdown
   , writePandoc
-  -- * Wrappers
-  , markdownToHtml
-  , markdownFromFile
-  -- * Extensions
-  , localLinks
+  , writePandocTrusted
   -- * Option sets
   , yesodDefaultWriterOptions
   , yesodDefaultParserState
-  -- * Form helpers
+  -- * Form helper
   , markdownField
-  , maybeMarkdownField
   )
   where
 
 import Yesod
-import Yesod.Form.Core
+import Yesod.Form.Types
+
+import Text.Blaze (preEscapedString, preEscapedText)
 import Text.Pandoc
 import Text.Pandoc.Shared
+import Text.HTML.SanitizeXSS (sanitizeBalance)
 
-import Control.Applicative ((<$>))
-import Data.Monoid         (Monoid)
-import Data.String         (IsString)
-import System.Directory    (doesFileExist)
+import Data.Monoid      (Monoid)
+import Data.String      (IsString)
+import System.Directory (doesFileExist)
+
+import qualified Data.Text as T
 
 newtype Markdown = Markdown String
     deriving (Eq, Ord, Show, Read, PersistField, IsString, Monoid)
 
-instance ToFormField Markdown y where
-    toFormField = markdownField
+instance ToField Markdown master where
+    toField = areq markdownField
 
-instance ToFormField (Maybe Markdown) y where
-    toFormField = maybeMarkdownField
+instance ToField (Maybe Markdown) master where
+    toField = aopt markdownField
 
-markdownField :: (IsForm f, FormType f ~ Markdown) => FormFieldSettings -> Maybe Markdown -> f
-markdownField = requiredFieldHelper markdownFieldProfile
-
-maybeMarkdownField :: FormFieldSettings -> FormletField sub y (Maybe Markdown)
-maybeMarkdownField = optionalFieldHelper markdownFieldProfile
-
-markdownFieldProfile :: FieldProfile sub y Markdown
-markdownFieldProfile = FieldProfile
-    { fpParse = Right . Markdown . unlines . lines'
-    , fpRender = \(Markdown m) -> m
-    , fpWidget = \theId name val _isReq -> addHamlet
+markdownField :: RenderMessage master FormMessage => Field sub master Markdown
+markdownField = Field
+    { fieldParse = blank $ Right . Markdown . unlines . lines' . T.unpack
+    , fieldView  = \theId name theClass val _isReq -> addHamlet
 #if __GLASGOW_HASKELL__ >= 700
         [hamlet|
 #else
         [$hamlet|
 #endif
-            <textarea id="#{theId}" name="#{name}" .markdown>#{val}
+            <textarea id="#{theId}" name="#{name}" :not (null theClass):class="#{T.intercalate " " theClass}">#{either id unMarkdown val}
             |]
-    }
+     }
 
-    where
+     where
+        unMarkdown :: Markdown -> T.Text
+        unMarkdown (Markdown s) = T.pack s
+
         lines' :: String -> [String]
-        lines' = map go . lines where
-          go [] = []
-          go ('\r':[]) = []
-          go (x:xs) = x : go xs
+        lines' = map go . lines
+
+        go []        = []
+        go ('\r':xs) = go xs
+        go (x:xs)    = x : go xs
+
+blank :: (Monad m, RenderMessage master FormMessage)
+      => (T.Text -> Either FormMessage a)
+      -> [T.Text]
+      -> m (Either (SomeMessage master) (Maybe a))
+blank _ []     = return $ Right Nothing
+blank _ ("":_) = return $ Right Nothing
+blank f (x:_)  = return $ either (Left . SomeMessage) (Right . Just) $ f x
 
 -- | Converts markdown directly to html using the yesod default option 
---   sets
+--   sets and sanitization.
 markdownToHtml :: Markdown -> Html
 markdownToHtml = writePandoc yesodDefaultWriterOptions
                . parseMarkdown yesodDefaultParserState
+
+-- | Same but with no sanitization run
+markdownToHtmlTrusted :: Markdown -> Html
+markdownToHtmlTrusted = writePandocTrusted yesodDefaultWriterOptions
+                      . parseMarkdown yesodDefaultParserState
 
 -- | Reads markdown in from the specified file; returns the empty string 
 --   if the file does not exist
@@ -94,40 +110,26 @@ markdownFromFile f = do
 
     return $ Markdown content
 
--- | Write 'Pandoc' to 'Html'.
+-- | Converts the intermediate Pandoc type to Html. Sanitizes HTML.
 writePandoc :: WriterOptions -> Pandoc -> Html
-writePandoc wo = preEscapedString . writeHtmlString wo
+writePandoc wo = preEscapedText . sanitizeBalance . T.pack . writeHtmlString wo
 
--- | Read in 'Markdown' to an intermediate 'Pandoc' type.
+-- | Skips the sanitization and its required conversion to Text
+writePandocTrusted :: WriterOptions -> Pandoc -> Html
+writePandocTrusted wo = preEscapedString . writeHtmlString wo
+
+-- | Parses Markdown into the intermediate Pandoc type
 parseMarkdown :: ParserState -> Markdown -> Pandoc
 parseMarkdown ro (Markdown m) = readMarkdown ro m
 
--- | Convert local (in-site) links. This function works on all link URLs 
---   that start with the two-character prefix @~:@. It normalizes the 
---   links and replaces the @~:@ with the @approot@ value for the site.
-localLinks :: Yesod m => Pandoc -> GHandler s m Pandoc
-localLinks p = (\y -> bottomUp (links y) p) <$> getYesod
-
-    where
-
-      links y (Link x ('~':':':l,n)) = Link x (joinPath y (approot y) (links' y [l]) [],n)
-      links _ x                      = x
-
-      links' y l = case cleanPath y l of
-        Left  corrected -> links' y corrected
-        Right xs        -> xs
-
--- | A set of default Pandoc writer options good for Yesod websites. 
---   Enables Javascript-based email obfuscation, eliminates div tags 
---   around sections, and disables text wrapping.
+-- | Pandoc defaults, plus Html5, minus WrapText
 yesodDefaultWriterOptions :: WriterOptions
 yesodDefaultWriterOptions = defaultWriterOptions
-  { writerEmailObfuscation = JavascriptObfuscation
-  , writerSectionDivs      = False
-  , writerWrapText         = False
+  { writerHtml5    = True
+  , writerWrapText = False
   }
 
--- | A set of default Pandoc reader options good for Yesod websites. 
+-- | Pandoc defaults, plus Smart, plus ParseRaw
 yesodDefaultParserState :: ParserState
 yesodDefaultParserState = defaultParserState
     { stateSmart    = True
