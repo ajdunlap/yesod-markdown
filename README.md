@@ -31,3 +31,12 @@ getPageR fp = do
                 #{content}
             |]
 ~~~
+
+### Testing
+
+~~~
+$ cabal install
+$ cabal install yesod warp
+$ runhaskell Test.hs
+$ $BROWSER http://localhost:3000
+~~~
