@@ -61,7 +61,7 @@ markdownField :: RenderMessage master FormMessage => Field sub master Markdown
 markdownField = Field
     { fieldParse = blank $ Right . Markdown . unlines . lines' . T.unpack
     , fieldView  = \theId name attrs val _isReq -> toWidget
-        [hamlet|
+        [hamlet|$newline never
 <textarea id="#{theId}" name="#{name}" *{attrs}>#{either id unMarkdown val}
 |]
      }
