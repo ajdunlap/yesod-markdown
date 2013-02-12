@@ -47,6 +47,9 @@ theForm = renderDivs $ TheForm
 getRootR :: Handler RepHtml
 getRootR = do
     ((res, form), enctype ) <- runFormPost theForm
+
+    fileData <- liftIO $ markdownFromFile "sample.md"
+
     defaultLayout $ do
         setTitle "My title"
 
@@ -70,6 +73,9 @@ getRootR = do
 
             <h3>Form data (trusted):
             <p>#{markdownToHtmlTrusted $ c}
+
+            <h3>File data (sample.md)
+            <p>#{fileData}
             |]
 
 postRootR :: Handler RepHtml
