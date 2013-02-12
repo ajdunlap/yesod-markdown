@@ -31,26 +31,29 @@ module Yesod.Markdown
   )
   where
 
-import Yesod.Form (ToField(..), areq, aopt)
-import Yesod.Form.Functions (parseHelper)
-import Yesod.Core (RenderMessage)
-import Yesod.Form.Types
-import Yesod.Widget (toWidget)
-import Text.Hamlet (hamlet, Html)
+import Data.Monoid (Monoid)
+import Data.String (IsString)
+import Data.Text (Text)
+import Data.Text.Encoding (decodeUtf8With)
+import Data.Text.Encoding.Error (lenientDecode)
+
 import Database.Persist (PersistField)
+import System.Directory (doesFileExist)
 
 import Text.Blaze (ToMarkup (toMarkup))
 import Text.Blaze.Html (preEscapedToMarkup)
-import Text.Pandoc
 import Text.HTML.SanitizeXSS (sanitizeBalance)
+import Text.Hamlet (hamlet, Html)
+import Text.Pandoc
 
-import Data.Monoid      (Monoid)
-import Data.String      (IsString)
-import System.Directory (doesFileExist)
+import Yesod.Core (RenderMessage)
+import Yesod.Form (ToField(..), areq, aopt)
+import Yesod.Form.Functions (parseHelper)
+import Yesod.Form.Types
+import Yesod.Widget (toWidget)
 
-import Data.Text (Text)
-import qualified Data.Text    as T
-import qualified Data.Text.IO as T
+import qualified Data.ByteString as B
+import qualified Data.Text       as T
 
 newtype Markdown = Markdown { unMarkdown :: Text }
     deriving (Eq, Ord, Show, Read, PersistField, IsString, Monoid)
@@ -87,13 +90,19 @@ markdownToHtmlTrusted = writePandocTrusted yesodDefaultWriterOptions
 -- | Returns the empty string if the file does not exist
 markdownFromFile :: FilePath -> IO Markdown
 markdownFromFile f = do
-    exists <- doesFileExist f
+    exists  <- doesFileExist f
     content <-
         if exists
-            then T.readFile f
+            then readFileUtf8 f
             else return ""
 
     return $ Markdown content
+
+    where
+        readFileUtf8 :: FilePath -> IO Text
+        readFileUtf8 fp = do
+            bs <- B.readFile fp
+            return $ decodeUtf8With lenientDecode bs
 
 writePandoc :: WriterOptions -> Pandoc -> Html
 writePandoc wo = preEscapedToMarkup . sanitizeBalance . T.pack . writeHtmlString wo
