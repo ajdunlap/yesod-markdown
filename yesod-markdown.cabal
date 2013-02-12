@@ -18,6 +18,7 @@ library
                , text            >= 0.11  && < 0.12
                , pandoc          >= 1.10  && < 1.11
                , blaze-html      >= 0.5   && < 0.6
+               , blaze-markup    >= 0.5   && < 0.6
                , xss-sanitize    >= 0.3.1 && < 0.4
                , directory
                , yesod-core      >= 1.1.5 && < 1.2

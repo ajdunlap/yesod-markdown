@@ -18,7 +18,7 @@ mkYesod "App" [parseRoutes|
 
 type Form x = Html -> MForm App App (FormResult x, Widget)
 
-instance Yesod App where 
+instance Yesod App where
     defaultLayout widget = do
         pc <- widgetToPageContent widget
         hamletToRepHtml [hamlet|$newline never
@@ -53,14 +53,23 @@ getRootR = do
         let c = case res of
                     FormSuccess f -> formContent f
                     _             -> ""
-            
+
         [whamlet|$newline never
             <h1>Markdown test
+
             <p>Enter some markdown:
             <form enctype="#{enctype}" method="post">
                 ^{form}
                 <input type="submit">
+
+            <h3>Form data (ToMarkup instance):
+            <p>#{c}
+
+            <h3>Form data:
             <p>#{markdownToHtml $ c}
+
+            <h3>Form data (trusted):
+            <p>#{markdownToHtmlTrusted $ c}
             |]
 
 postRootR :: Handler RepHtml

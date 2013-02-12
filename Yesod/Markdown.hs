@@ -32,12 +32,14 @@ module Yesod.Markdown
   where
 
 import Yesod.Form (ToField(..), areq, aopt)
-import Yesod.Core (RenderMessage, SomeMessage(..))
+import Yesod.Form.Functions (parseHelper)
+import Yesod.Core (RenderMessage)
 import Yesod.Form.Types
 import Yesod.Widget (toWidget)
 import Text.Hamlet (hamlet, Html)
 import Database.Persist (PersistField)
 
+import Text.Blaze (ToMarkup (toMarkup))
 import Text.Blaze.Html (preEscapedToMarkup)
 import Text.Pandoc
 import Text.HTML.SanitizeXSS (sanitizeBalance)
@@ -46,10 +48,16 @@ import Data.Monoid      (Monoid)
 import Data.String      (IsString)
 import System.Directory (doesFileExist)
 
-import qualified Data.Text as T
+import Data.Text (Text)
+import qualified Data.Text    as T
+import qualified Data.Text.IO as T
 
-newtype Markdown = Markdown String
+newtype Markdown = Markdown { unMarkdown :: Text }
     deriving (Eq, Ord, Show, Read, PersistField, IsString, Monoid)
+
+instance ToMarkup Markdown where
+    -- | Sanitized by default
+    toMarkup = markdownToHtml
 
 instance ToField Markdown master where
     toField = areq markdownField
@@ -59,76 +67,51 @@ instance ToField (Maybe Markdown) master where
 
 markdownField :: RenderMessage master FormMessage => Field sub master Markdown
 markdownField = Field
-    { fieldParse = \values _ -> blank (Right . Markdown . unlines . lines' . T.unpack) values
+    { fieldParse = parseHelper $ Right . Markdown
     , fieldView  = \theId name attrs val _isReq -> toWidget
         [hamlet|$newline never
 <textarea id="#{theId}" name="#{name}" *{attrs}>#{either id unMarkdown val}
 |]
-     , fieldEnctype = UrlEncoded
-     }
+    , fieldEnctype = UrlEncoded
+    }
 
-     where
-        unMarkdown :: Markdown -> T.Text
-        unMarkdown (Markdown s) = T.pack s
-
-        lines' :: String -> [String]
-        lines' = map go . lines
-
-        go []        = []
-        go ('\r':xs) = go xs
-        go (x:xs)    = x : go xs
-
-blank :: (Monad m, RenderMessage master FormMessage)
-      => (T.Text -> Either FormMessage a)
-      -> [T.Text]
-      -> m (Either (SomeMessage master) (Maybe a))
-blank _ []     = return $ Right Nothing
-blank _ ("":_) = return $ Right Nothing
-blank f (x:_)  = return $ either (Left . SomeMessage) (Right . Just) $ f x
-
--- | Converts markdown directly to html using the yesod default option 
---   sets and sanitization.
 markdownToHtml :: Markdown -> Html
 markdownToHtml = writePandoc yesodDefaultWriterOptions
                . parseMarkdown yesodDefaultReaderOptions
 
--- | Same but with no sanitization run
+-- | No HTML sanitization
 markdownToHtmlTrusted :: Markdown -> Html
 markdownToHtmlTrusted = writePandocTrusted yesodDefaultWriterOptions
                       . parseMarkdown yesodDefaultReaderOptions
 
--- | Reads markdown in from the specified file; returns the empty string 
---   if the file does not exist
+-- | Returns the empty string if the file does not exist
 markdownFromFile :: FilePath -> IO Markdown
 markdownFromFile f = do
     exists <- doesFileExist f
-    content <- do
+    content <-
         if exists
-            then readFile f
+            then T.readFile f
             else return ""
 
     return $ Markdown content
 
--- | Converts the intermediate Pandoc type to Html. Sanitizes HTML.
 writePandoc :: WriterOptions -> Pandoc -> Html
 writePandoc wo = preEscapedToMarkup . sanitizeBalance . T.pack . writeHtmlString wo
 
--- | Skips the sanitization and its required conversion to Text
 writePandocTrusted :: WriterOptions -> Pandoc -> Html
 writePandocTrusted wo = preEscapedToMarkup . writeHtmlString wo
 
--- | Parses Markdown into the intermediate Pandoc type
 parseMarkdown :: ReaderOptions -> Markdown -> Pandoc
-parseMarkdown ro (Markdown m) = readMarkdown ro m
+parseMarkdown ro = readMarkdown ro . T.unpack . unMarkdown
 
--- | Pandoc defaults, plus Html5, minus WrapText
+-- | Defaults plus Html5, minus WrapText
 yesodDefaultWriterOptions :: WriterOptions
 yesodDefaultWriterOptions = def
   { writerHtml5    = True
   , writerWrapText = False
   }
 
--- | Pandoc defaults, plus Smart, plus ParseRaw
+-- | Defaults plus Smart and ParseRaw
 yesodDefaultReaderOptions :: ReaderOptions
 yesodDefaultReaderOptions = def
     { readerSmart    = True
