@@ -25,7 +25,7 @@ module Yesod.Markdown
   , writePandocTrusted
   -- * Option sets
   , yesodDefaultWriterOptions
-  , yesodDefaultParserState
+  , yesodDefaultReaderOptions
   -- * Form helper
   , markdownField
   )
@@ -90,12 +90,12 @@ blank f (x:_)  = return $ either (Left . SomeMessage) (Right . Just) $ f x
 --   sets and sanitization.
 markdownToHtml :: Markdown -> Html
 markdownToHtml = writePandoc yesodDefaultWriterOptions
-               . parseMarkdown yesodDefaultParserState
+               . parseMarkdown yesodDefaultReaderOptions
 
 -- | Same but with no sanitization run
 markdownToHtmlTrusted :: Markdown -> Html
 markdownToHtmlTrusted = writePandocTrusted yesodDefaultWriterOptions
-                      . parseMarkdown yesodDefaultParserState
+                      . parseMarkdown yesodDefaultReaderOptions
 
 -- | Reads markdown in from the specified file; returns the empty string 
 --   if the file does not exist
@@ -118,19 +118,19 @@ writePandocTrusted :: WriterOptions -> Pandoc -> Html
 writePandocTrusted wo = preEscapedToMarkup . writeHtmlString wo
 
 -- | Parses Markdown into the intermediate Pandoc type
-parseMarkdown :: ParserState -> Markdown -> Pandoc
+parseMarkdown :: ReaderOptions -> Markdown -> Pandoc
 parseMarkdown ro (Markdown m) = readMarkdown ro m
 
 -- | Pandoc defaults, plus Html5, minus WrapText
 yesodDefaultWriterOptions :: WriterOptions
-yesodDefaultWriterOptions = defaultWriterOptions
+yesodDefaultWriterOptions = def
   { writerHtml5    = True
   , writerWrapText = False
   }
 
 -- | Pandoc defaults, plus Smart, plus ParseRaw
-yesodDefaultParserState :: ParserState
-yesodDefaultParserState = defaultParserState
-    { stateSmart    = True
-    , stateParseRaw = True
+yesodDefaultReaderOptions :: ReaderOptions
+yesodDefaultReaderOptions = def
+    { readerSmart    = True
+    , readerParseRaw = True
     }
