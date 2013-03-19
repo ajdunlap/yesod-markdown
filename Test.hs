@@ -27,9 +27,6 @@ instance Yesod App where
                 <head>
                     <meta charset="utf-8">
                     <title>#{pageTitle pc}
-                    <meta name="description" content="my awesome site">
-                    <meta name="author" content="Patrick Brisbin">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     ^{pageHead pc}
                 <body>
                     ^{pageBody pc}
@@ -38,7 +35,7 @@ instance Yesod App where
 instance RenderMessage App FormMessage where
     renderMessage _ _ = defaultFormMessage
 
-data TheForm = TheForm { formContent  :: Markdown }
+data TheForm = TheForm { formContent :: Markdown }
 
 theForm :: Form TheForm
 theForm = renderDivs $ TheForm
@@ -46,7 +43,7 @@ theForm = renderDivs $ TheForm
 
 getRootR :: Handler RepHtml
 getRootR = do
-    ((res, form), enctype ) <- runFormPost theForm
+    ((res, form), enctype) <- runFormPost theForm
 
     fileData <- liftIO $ markdownFromFile "sample.md"
 
