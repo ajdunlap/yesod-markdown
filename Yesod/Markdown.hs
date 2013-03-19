@@ -70,7 +70,7 @@ instance ToField (Maybe Markdown) master where
 
 markdownField :: RenderMessage master FormMessage => Field sub master Markdown
 markdownField = Field
-    { fieldParse = parseHelper $ Right . Markdown
+    { fieldParse = parseHelper $ Right . Markdown . T.filter (/= '\r')
     , fieldView  = \theId name attrs val _isReq -> toWidget
         [hamlet|$newline never
 <textarea id="#{theId}" name="#{name}" *{attrs}>#{either id unMarkdown val}
