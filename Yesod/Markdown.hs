@@ -47,7 +47,6 @@ import Text.Hamlet (hamlet, Html)
 import Text.Pandoc
 
 import Yesod.Core (RenderMessage, HandlerSite)
-import Yesod.Form (ToField(..), areq, aopt)
 import Yesod.Form.Functions (parseHelper)
 import Yesod.Form.Types
 import Yesod.Core.Widget (toWidget)
@@ -61,12 +60,6 @@ newtype Markdown = Markdown { unMarkdown :: Text }
 instance ToMarkup Markdown where
     -- | Sanitized by default
     toMarkup = markdownToHtml
-
-instance ToField Markdown master where
-    toField = areq markdownField
-
-instance ToField (Maybe Markdown) master where
-    toField = aopt markdownField
 
 markdownField :: Monad m => RenderMessage (HandlerSite m) FormMessage => Field m Markdown
 markdownField = Field
