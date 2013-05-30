@@ -38,6 +38,7 @@ import Data.Text.Encoding (decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
 
 import Database.Persist (PersistField)
+import Database.Persist.Sql (PersistFieldSql)
 import System.Directory (doesFileExist)
 
 import Text.Blaze (ToMarkup (toMarkup))
@@ -55,7 +56,7 @@ import qualified Data.ByteString as B
 import qualified Data.Text       as T
 
 newtype Markdown = Markdown { unMarkdown :: Text }
-    deriving (Eq, Ord, Show, Read, PersistField, IsString, Monoid)
+    deriving (Eq, Ord, Show, Read, PersistField, PersistFieldSql, IsString, Monoid)
 
 instance ToMarkup Markdown where
     -- | Sanitized by default
