@@ -16,7 +16,7 @@ mkYesod "App" [parseRoutes|
     / RootR GET POST
 |]
 
-type Form x = Html -> MForm App App (FormResult x, Widget)
+type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 
 instance Yesod App where
     defaultLayout widget = do
