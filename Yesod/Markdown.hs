@@ -110,8 +110,9 @@ parseMarkdown ro = readMarkdown ro . T.unpack . unMarkdown
 -- | Defaults plus Html5, minus WrapText
 yesodDefaultWriterOptions :: WriterOptions
 yesodDefaultWriterOptions = def
-  { writerHtml5    = True
-  , writerWrapText = False
+  { writerHtml5     = True
+  , writerWrapText  = False
+  , writerHighlight = True
   }
 
 -- | Defaults plus Smart and ParseRaw
