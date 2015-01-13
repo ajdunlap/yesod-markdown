@@ -3,7 +3,7 @@ version:             0.9.3
 synopsis:            Tools for using markdown in a yesod application
 description:         A subset of pandoc functionality useful for markdown processing in yesod applications
 homepage:            http://github.com/pbrisbin/yesod-markdown
-license:             GPL
+license:             GPL-2
 license-file:        LICENSE
 author:              Alexander Dunlap, Patrick Brisbin
 maintainer:          Patrick Brisbin <pbrisbin@gmail.com>
