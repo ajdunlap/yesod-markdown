@@ -1,5 +1,7 @@
 # Yesod markdown
 
+[![Build Status](https://travis-ci.org/pbrisbin/yesod-markdown.svg?branch=master)](https://travis-ci.org/pbrisbin/yesod-markdown)
+
 A small wrapper over pandoc's powerful `Markdown -> Html` support with usage
 tailored for Yesod.
 
