@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -31,7 +32,10 @@ module Yesod.Markdown
   )
   where
 
+#if __GLASGOW_HASKELL__ < 710
 import Data.Monoid (Monoid)
+#endif
+
 import Data.String (IsString)
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8With)
