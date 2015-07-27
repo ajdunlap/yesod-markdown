@@ -112,7 +112,7 @@ writePandocTrusted :: WriterOptions -> Pandoc -> Html
 writePandocTrusted wo = preEscapedToMarkup . writeHtmlString wo
 
 parseMarkdown :: ReaderOptions -> Markdown -> Pandoc
-parseMarkdown ro = readMarkdown ro . T.unpack . unMarkdown
+parseMarkdown ro = either (error . show) id . readMarkdown ro . T.unpack . unMarkdown
 
 -- | Defaults plus Html5, minus WrapText
 yesodDefaultWriterOptions :: WriterOptions
