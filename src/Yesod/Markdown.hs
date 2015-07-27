@@ -50,6 +50,7 @@ import Text.Blaze.Html (preEscapedToMarkup)
 import Text.HTML.SanitizeXSS (sanitizeBalance)
 import Text.Hamlet (hamlet, Html)
 import Text.Pandoc
+import Text.Pandoc.Error
 
 import Yesod.Core (RenderMessage, HandlerSite)
 import Yesod.Form.Functions (parseHelper)
@@ -67,7 +68,7 @@ instance PersistFieldSql Markdown where
 
 instance ToMarkup Markdown where
     -- | Sanitized by default
-    toMarkup = markdownToHtml
+    toMarkup = handleError . markdownToHtml
 
 markdownField :: Monad m => RenderMessage (HandlerSite m) FormMessage => Field m Markdown
 markdownField = Field
@@ -79,13 +80,13 @@ markdownField = Field
     , fieldEnctype = UrlEncoded
     }
 
-markdownToHtml :: Markdown -> Html
-markdownToHtml = writePandoc yesodDefaultWriterOptions
+markdownToHtml :: Markdown -> Either PandocError Html
+markdownToHtml = (writePandoc yesodDefaultWriterOptions <$>)
                . parseMarkdown yesodDefaultReaderOptions
 
 -- | No HTML sanitization
-markdownToHtmlTrusted :: Markdown -> Html
-markdownToHtmlTrusted = writePandocTrusted yesodDefaultWriterOptions
+markdownToHtmlTrusted :: Markdown -> Either PandocError Html
+markdownToHtmlTrusted = (writePandocTrusted yesodDefaultWriterOptions <$>)
                       . parseMarkdown yesodDefaultReaderOptions
 
 -- | Returns the empty string if the file does not exist
@@ -111,8 +112,8 @@ writePandoc wo = preEscapedToMarkup . sanitizeBalance . T.pack . writeHtmlString
 writePandocTrusted :: WriterOptions -> Pandoc -> Html
 writePandocTrusted wo = preEscapedToMarkup . writeHtmlString wo
 
-parseMarkdown :: ReaderOptions -> Markdown -> Pandoc
-parseMarkdown ro = either (error . show) id . readMarkdown ro . T.unpack . unMarkdown
+parseMarkdown :: ReaderOptions -> Markdown -> Either PandocError Pandoc
+parseMarkdown ro = readMarkdown ro . T.unpack . unMarkdown
 
 -- | Defaults plus Html5, minus WrapText
 yesodDefaultWriterOptions :: WriterOptions
