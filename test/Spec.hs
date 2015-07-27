@@ -26,7 +26,7 @@ spec = describe "Yesod.Markdown" $ do
                 , "</script>"
                 ]
 
-        let html = markdownToHtml markdown
+        let Right html = markdownToHtml markdown
 
         renderHtml html `shouldBe` TL.concat
             [ "<h1 id=\"title\">Title</h1>"
@@ -51,7 +51,7 @@ spec = describe "Yesod.Markdown" $ do
                 , "</script>"
                 ]
 
-        let html = markdownToHtmlTrusted markdown
+        let Right html = markdownToHtmlTrusted markdown
 
         renderHtml html `shouldBe` TL.concat
             [ "<h1 id=\"title\">Title</h1>"

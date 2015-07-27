@@ -81,12 +81,12 @@ markdownField = Field
     }
 
 markdownToHtml :: Markdown -> Either PandocError Html
-markdownToHtml = (writePandoc yesodDefaultWriterOptions <$>)
+markdownToHtml = fmap (writePandoc yesodDefaultWriterOptions)
                . parseMarkdown yesodDefaultReaderOptions
 
 -- | No HTML sanitization
 markdownToHtmlTrusted :: Markdown -> Either PandocError Html
-markdownToHtmlTrusted = (writePandocTrusted yesodDefaultWriterOptions <$>)
+markdownToHtmlTrusted = fmap (writePandocTrusted yesodDefaultWriterOptions)
                       . parseMarkdown yesodDefaultReaderOptions
 
 -- | Returns the empty string if the file does not exist
