@@ -1,5 +1,9 @@
 ## [*Unreleased*](https://github.com/pbrisbin/yesod-markdown/compare/v0.11.4...master)
 
+None
+
+## [v0.12.0](https://github.com/pbrisbin/yesod-markdown/compare/v0.11.4...v0.12.0)
+
 - Require pandoc-2.0, support GHC 8.2 ([@cdepillabout](https://github.com/pbrisbin/yesod-markdown/pull/40))
 - Drop GHC 7.10 support
 
