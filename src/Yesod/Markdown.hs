@@ -12,6 +12,8 @@ module Yesod.Markdown
   -- * Wrappers
   , markdownToHtml
   , markdownToHtmlTrusted
+  , markdownToHtmlWithExtensions
+  , markdownToHtmlWith
   , markdownFromFile
   -- * Conversions
   , parseMarkdown
@@ -25,6 +27,7 @@ module Yesod.Markdown
   , markdownField
   ) where
 
+import Control.Monad ((<=<))
 import Data.String (IsString)
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8With)
@@ -65,16 +68,52 @@ markdownField = Field
     , fieldEnctype = UrlEncoded
     }
 
+-- | Process Markdown using our options and sanitization
 markdownToHtml :: Markdown -> Either PandocError Html
-markdownToHtml md = do
-    p <- parseMarkdown yesodDefaultReaderOptions md
-    writePandoc yesodDefaultWriterOptions p
+markdownToHtml = markdownToHtmlWith
+    yesodDefaultReaderOptions
+    yesodDefaultWriterOptions
 
 -- | No HTML sanitization
+--
+-- **NOTE**: Use only with /fully-trusted/ input.
+--
 markdownToHtmlTrusted :: Markdown -> Either PandocError Html
-markdownToHtmlTrusted md = do
-    p <- parseMarkdown yesodDefaultReaderOptions md
-    writePandocTrusted yesodDefaultWriterOptions p
+markdownToHtmlTrusted = markdownToHtmlWith' id
+    yesodDefaultReaderOptions
+    yesodDefaultWriterOptions
+
+-- | Process markdown with given extensions
+--
+-- Uses our options, and overrides extensions only.
+--
+-- > markdownToHtmlWithExtensions githubMarkdownExtensions
+--
+markdownToHtmlWithExtensions
+    :: Extensions
+    -> Markdown
+    -> Either PandocError Html
+markdownToHtmlWithExtensions exts = markdownToHtmlWith
+    yesodDefaultReaderOptions { readerExtensions = exts }
+    yesodDefaultWriterOptions { writerExtensions = exts }
+
+-- | Fully controllable Markdown processing
+markdownToHtmlWith
+    :: ReaderOptions
+    -> WriterOptions
+    -> Markdown
+    -> Either PandocError Html
+markdownToHtmlWith = markdownToHtmlWith' sanitizeBalance
+
+-- | Internal function, the only way to skip sanitization
+markdownToHtmlWith'
+    :: (Text -> Text)
+    -> ReaderOptions
+    -> WriterOptions
+    -> Markdown
+    -> Either PandocError Html
+markdownToHtmlWith' sanitize ropts wopts =
+    writePandocWith sanitize wopts <=< parseMarkdown ropts
 
 -- | Returns the empty string if the file does not exist
 markdownFromFile :: FilePath -> IO Markdown
@@ -89,16 +128,26 @@ markdownFromFile f = do
     readFileUtf8 fp = decodeUtf8With lenientDecode <$> B.readFile fp
 
 writePandoc :: WriterOptions -> Pandoc -> Either PandocError Html
-writePandoc wo p = preEscapedToMarkup . sanitizeBalance <$> writeHTML wo p
+writePandoc = writePandocWith sanitizeBalance
+{-# DEPRECATED writePandoc "Don't use this directly" #-}
 
 writePandocTrusted :: WriterOptions -> Pandoc -> Either PandocError Html
-writePandocTrusted wo p = preEscapedToMarkup <$> writeHTML wo p
+writePandocTrusted = writePandocWith id
+{-# DEPRECATED writePandocTrusted "Don't use this directly" #-}
 
-writeHTML :: WriterOptions -> Pandoc -> Either PandocError Text
-writeHTML wo = runPure . writeHtml5String wo
+writePandocWith
+    :: (Text -> Text)
+    -> WriterOptions
+    -> Pandoc
+    -> Either PandocError Html
+writePandocWith f wo
+    = (preEscapedToMarkup . f <$>)
+    . runPure
+    . writeHtml5String wo
 
 parseMarkdown :: ReaderOptions -> Markdown -> Either PandocError Pandoc
 parseMarkdown ro = runPure . readMarkdown ro . unMarkdown
+{-# DEPRECATED parseMarkdown "Don't use this directly" #-}
 
 -- | Defaults minus WrapText, plus our extensions
 yesodDefaultWriterOptions :: WriterOptions
