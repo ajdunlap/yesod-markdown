@@ -1,6 +1,11 @@
-## [*Unreleased*](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.2...master)
+## [*Unreleased*](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.3...master)
 
 None
+
+## [v0.12.3](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.2...v0.12.3)
+
+- Added `markdownToHtmlWith` & `markdownToHtmlWithExtensions`
+- Deprecate internal conversion functions
 
 ## [v0.12.2](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.1...v0.12.2)
 
