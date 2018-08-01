@@ -4,7 +4,8 @@ version: 2.0
 references:
   stack_build: &stack_build
     docker:
-      - image: fpco/stack-build:lts
+      # https://github.com/haskell-works/stack-build/blob/master/minimal/Dockerfile
+      - image: quay.io/haskell_works/stack-build-minimal
     steps:
       - checkout
       - run:
@@ -21,6 +22,7 @@ references:
       - run:
           name: Dependencies
           command: make setup
+          no_output_timeout: 120m
       - run:
           name: Build
           command: make build
@@ -46,12 +48,11 @@ jobs:
   build_8.0.2:
     <<: *stack_build
     environment:
-      LINT: 0  # https://circleci.com/gh/pbrisbin/yesod-markdown/73
-      STACK_ARGUMENTS: --stack-yaml stack-lts-9.21.yaml
+      STACK_YAML: stack-lts-9.21.yaml
   build_8.2.2:
     <<: *stack_build
     environment:
-      STACK_ARGUMENTS: --resolver lts-10.3
+      STACK_YAML: stack-lts-11.19.yaml
   build:
     <<: *stack_build
 
@@ -59,10 +60,12 @@ jobs:
   # accomplish that while re-using the *stack_build reference.
   build_nightly:
     docker:
-      - image: fpco/stack-build:lts
+      - image: quay.io/haskell_works/stack-build-minimal
     steps:
       - checkout
-      - run: make
+      - run:
+          command: make
+          no_output_timeout: 120m
 
 workflows:
   version: 2
