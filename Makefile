@@ -19,5 +19,5 @@ test:
 
 .PHONY: lint
 lint:
-	stack exec hlint .
-	stack exec weeder .
+	stack exec $(STACK_ARGUMENTS) hlint .
+	stack exec $(STACK_ARGUMENTS) weeder .
