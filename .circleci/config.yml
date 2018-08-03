@@ -22,8 +22,8 @@ references:
       - run:
           name: Dependencies
           command: |
-            stack upgrade
-            stack --version
+            # https://github.com/commercialhaskell/stack/issues/4071
+            rm -rf ~/.stack/precompiled/x86_64-linux/*/*/haddock-library-1.6.0*
             make setup
           no_output_timeout: 120m
       - run:
