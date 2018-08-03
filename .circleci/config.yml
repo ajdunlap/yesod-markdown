@@ -21,7 +21,10 @@ references:
             - 1-master-
       - run:
           name: Dependencies
-          command: make setup
+          command: |
+            stack upgrade
+            stack --version
+            make setup
           no_output_timeout: 120m
       - run:
           name: Build
