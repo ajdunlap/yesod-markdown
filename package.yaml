@@ -1,6 +1,6 @@
 ---
 name: yesod-markdown
-version: '0.12.3'
+version: 0.12.4
 synopsis: Tools for using markdown in a yesod application
 description: >
   A subset of Pandoc functionality useful for markdown processing in yesod
@@ -13,6 +13,7 @@ github: pbrisbin/yesod-markdown
 homepage: http://github.com/pbrisbin/yesod-markdown
 extra-source-files:
   - README.md
+  - CHANGELOG.md
 
 dependencies:
   - base >=4.8.0 && <5
