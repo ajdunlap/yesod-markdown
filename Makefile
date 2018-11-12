@@ -1,5 +1,9 @@
 all: setup build test lint
 
+.PHONY: clean
+clean:
+	stack clean
+
 .PHONY: setup
 setup:
 	stack setup $(STACK_ARGUMENTS)
