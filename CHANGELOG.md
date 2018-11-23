@@ -1,6 +1,10 @@
-## [*Unreleased*](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.4...master)
+## [*Unreleased*](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.5...master)
 
 None
+
+## [v0.12.5](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.4...v0.12.5)
+
+- Allow pandoc-2.4
 
 ## [v0.12.4](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.3...v0.12.4)
 
