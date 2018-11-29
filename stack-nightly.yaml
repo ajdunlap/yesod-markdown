@@ -1,9 +1,8 @@
 # Date of last update, overridden on CI with --resolver
 resolver: nightly-2018-11-23
 
-# extra-deps:
-#   - HsYAML-0.1.1.2
-#   - pandoc-2.2.3.2
+extra-deps:
+  - pandoc-2.5
 
 # Sometimes necessary, sometimes problematic. Hopefully never both?
 #
