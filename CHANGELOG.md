@@ -1,6 +1,10 @@
-## [_Unreleased_](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.6.7...main)
+## [_Unreleased_](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.6.8...main)
 
 None
+
+## [v0.12.6.8](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.6.7...v0.12.6.8)
+
+- Allow persistent-2.12
 
 ## [v0.12.6.7](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.6.6...v0.12.6.7)
 
