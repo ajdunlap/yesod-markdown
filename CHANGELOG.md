@@ -1,6 +1,10 @@
-## [_Unreleased_](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.6.8...main)
+## [_Unreleased_](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.6.9...main)
 
 None
+
+## [v0.12.6.9](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.6.8...v0.12.6.9)
+
+- Allow yesod-form-1.7
 
 ## [v0.12.6.8](https://github.com/pbrisbin/yesod-markdown/compare/v0.12.6.7...v0.12.6.8)
 

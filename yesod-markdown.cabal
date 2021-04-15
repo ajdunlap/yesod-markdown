@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2595b9710ce55b82fba577ebc72fdf7ccc7b6bc4f92c70a688d98d1d635ce5d4
+-- hash: 3a42e4672803025fb94fda72a4157932468daeac3b3f02d5cb1b9d182d5c2fb8
 
 name:           yesod-markdown
-version:        0.12.6.8
+version:        0.12.6.9
 synopsis:       Tools for using markdown in a yesod application
 description:    A subset of Pandoc functionality useful for markdown processing in yesod applications
 category:       Web, Yesod
@@ -46,7 +46,7 @@ library
     , text >=0.11 && <2.0
     , xss-sanitize >=0.3.1 && <0.4
     , yesod-core >=1.2 && <1.7
-    , yesod-form >=1.3 && <1.7
+    , yesod-form >=1.3 && <1.8
   default-language: Haskell2010
 
 test-suite test
